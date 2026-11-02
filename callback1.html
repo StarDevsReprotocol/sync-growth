@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sync Growth — Authorizing</title>
+<link rel="icon" type="image/png" href="/bot.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #3B82F6;
+  --blue-bright: #60A5FA;
+  --yellow: #FACC15;
+  --green: #22c55e;
+  --red: #ef4444;
+  --bg: #070a12;
+  --bg-2: #0d1220;
+  --card: #121826;
+  --border: #1e2739;
+  --text: #e5e7eb;
+  --text-dim: #94a3b8;
+  --text-mute: #64748b;
+}
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.bg-layer { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.bg-gradient {
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 15%, rgba(59, 130, 246, 0.15), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 85%, rgba(250, 204, 21, 0.10), transparent 60%);
+}
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+}
+.card {
+  background: linear-gradient(180deg, var(--card) 0%, var(--bg-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  width: 100%;
+  max-width: 460px;
+  padding: 40px 32px 36px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--blue-bright), var(--yellow), transparent);
+}
+.header { display: flex; align-items: center; gap: 14px; margin-bottom: 30px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+.logo { width: 52px; height: 52px; border-radius: 14px; border: 2px solid rgba(59, 130, 246, 0.35); box-shadow: 0 0 24px rgba(59, 130, 246, 0.3); flex-shrink: 0; }
+.brand h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.8px; background: linear-gradient(90deg, var(--blue-bright), var(--yellow)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.brand p { font-size: 12px; color: var(--text-mute); margin-top: 2px; letter-spacing: 0.3px; }
+.status { border-radius: 14px; padding: 22px 20px; display: flex; gap: 16px; align-items: flex-start; margin-bottom: 22px; border: 1px solid; }
+.status.success { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.28); }
+.status.error { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.28); }
+.status.info { background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.28); }
+.status-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px; }
+.status.success .status-icon { background: rgba(34, 197, 94, 0.15); }
+.status.error .status-icon { background: rgba(239, 68, 68, 0.15); }
+.status.info .status-icon { background: rgba(59, 130, 246, 0.15); }
+.status-text h2 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.status.success .status-text h2 { color: #4ade80; }
+.status.error .status-text h2 { color: #f87171; }
+.status.info .status-text h2 { color: var(--blue-bright); }
+.status-text p { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; }
+.loader-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 24px 0 8px; }
+.spinner { width: 48px; height: 48px; position: relative; }
+.spinner::before, .spinner::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; }
+.spinner::before { border-top-color: var(--blue-bright); border-right-color: var(--blue-bright); animation: spin 1s linear infinite; }
+.spinner::after { inset: 10px; border-bottom-color: var(--yellow); border-left-color: var(--yellow); animation: spin 1.4s linear infinite reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress-bar { width: 100%; height: 3px; background: rgba(59, 130, 246, 0.1); border-radius: 999px; overflow: hidden; position: relative; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue-bright), var(--yellow)); border-radius: 999px; width: 40%; position: absolute; animation: progressLoop 1.8s ease-in-out infinite; }
+@keyframes progressLoop {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+.loader-text { font-size: 13px; color: var(--text-mute); letter-spacing: 0.3px; }
+.error-msg { color: #f87171; font-size: 13px; margin-top: 14px; text-align: center; font-weight: 500; min-height: 18px; }
+</style>
+
+<style id="sync-growth-redesign">
+:root{
+ --sg-bg:#070914;--sg-panel:rgba(15,20,40,.78);--sg-panel2:rgba(21,29,55,.78);
+ --sg-line:rgba(130,157,255,.19);--sg-text:#f4f6ff;--sg-muted:#a5b0cf;
+ --sg-cyan:#54e6ff;--sg-violet:#9b7bff;--sg-pink:#ff71c8;--sg-green:#5df2b5;
+}
+*{scrollbar-color:#39466d #090d1b}
+body{background:var(--sg-bg)!important;color:var(--sg-text)!important;position:relative;isolation:isolate}
+body:before{content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;background:
+ radial-gradient(ellipse at 12% 12%,rgba(63,110,255,.22),transparent 34%),
+ radial-gradient(ellipse at 88% 26%,rgba(151,76,255,.18),transparent 32%),
+ radial-gradient(ellipse at 55% 100%,rgba(36,220,220,.11),transparent 38%),
+ linear-gradient(145deg,#070914 0%,#0a1022 55%,#080a18 100%)}
+#sg-particles{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:.78}
+a{transition:color .2s ease,transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+::selection{background:rgba(84,230,255,.28);color:white}
+.bg-layer{opacity:.45}
+.bg-grid{opacity:.35!important;background-size:54px 54px!important;background-image:linear-gradient(rgba(135,160,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(135,160,255,.045) 1px,transparent 1px)!important}
+.card,.step,.feature,.stat-card,.info-card,.content-card,.faq-item{
+ background:linear-gradient(145deg,rgba(19,27,54,.88),rgba(10,15,32,.86))!important;
+ border:1px solid var(--sg-line)!important;box-shadow:0 18px 60px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.045)!important;
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
+}
+.card{border-radius:26px!important}
+.card:before{background:linear-gradient(90deg,transparent,var(--sg-cyan),var(--sg-violet),var(--sg-pink),transparent)!important}
+h1,h2,h3{letter-spacing:-.035em}
+.gradient{background:linear-gradient(100deg,var(--sg-cyan),#a99aff 52%,var(--sg-pink))!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+button,.btn,.back-btn{border-radius:14px!important}
+.btn-primary,.back-btn{background:linear-gradient(105deg,#536bff,#8b5cff)!important;box-shadow:0 10px 32px rgba(91,101,255,.3)!important;border:1px solid rgba(255,255,255,.18)!important}
+.btn-secondary{background:rgba(255,255,255,.045)!important;border:1px solid var(--sg-line)!important}
+.btn:hover,.back-btn:hover{transform:translateY(-3px);box-shadow:0 14px 38px rgba(93,111,255,.35)!important}
+#nav{background:rgba(7,10,24,.72)!important;border-bottom:1px solid rgba(144,164,255,.13)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#nav.scrolled{box-shadow:0 12px 40px rgba(0,0,0,.28)}
+.nav-brand span,.brand h1{background:linear-gradient(100deg,var(--sg-cyan),#b4a4ff,var(--sg-pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-links a{color:#c6cdeb!important}
+.nav-links a:hover{color:var(--sg-cyan)!important}
+.hero{position:relative}
+.hero-badge{border:1px solid rgba(93,242,181,.28)!important;background:rgba(93,242,181,.08)!important;color:#b7ffe1!important}
+.hero-logo,.logo{box-shadow:0 0 0 7px rgba(106,124,255,.08),0 0 44px rgba(84,230,255,.2)!important;border-radius:22px!important}
+.section-label{color:var(--sg-cyan)!important;letter-spacing:.16em!important}
+.section-title{color:#f5f6ff}
+.section-subtitle,.hero p,.card p{color:var(--sg-muted)!important}
+.step,.feature,.stat-card{border-radius:20px!important;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.step:hover,.feature:hover,.stat-card:hover{transform:translateY(-6px);border-color:rgba(84,230,255,.42)!important;box-shadow:0 22px 55px rgba(22,48,120,.25)!important}
+footer{border-top:1px solid var(--sg-line)!important;color:var(--sg-muted)!important}
+.icon-wrap,.status-icon{filter:drop-shadow(0 0 16px rgba(84,230,255,.24))}
+.status{border-radius:16px!important}
+.status.info{background:rgba(74,137,255,.1)!important;border-color:rgba(84,150,255,.25)!important}
+.spinner{border-color:rgba(255,255,255,.13)!important;border-top-color:var(--sg-cyan)!important}
+.progress-fill{background:linear-gradient(90deg,var(--sg-cyan),var(--sg-violet),var(--sg-pink))!important}
+.reveal{transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1)!important}
+@media(max-width:640px){.card{padding:30px 22px!important;border-radius:22px!important}#sg-particles{opacity:.55}.hero{padding-left:20px!important;padding-right:20px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}#sg-particles{display:none!important}}
+</style>
+
+</head>
+<body>
+
+<div class="bg-layer bg-gradient"></div>
+<div class="bg-layer bg-grid"></div>
+
+<div class="card">
+  <div class="header">
+    <img src="/bot.png" alt="Sync Growth" class="logo" onerror="this.style.display='none'">
+    <div class="brand">
+      <h1>SYNC GROWTH</h1>
+      <p>Authorization Portal</p>
+    </div>
+  </div>
+
+  <div class="status info" id="status-box">
+    <div class="status-icon" id="status-icon">🔐</div>
+    <div class="status-text">
+      <h2 id="status-title">Authorizing Your Account</h2>
+      <p id="status-msg">Connecting to Discord to complete the authorization. Please wait a moment.</p>
+    </div>
+  </div>
+
+  <div class="loader-wrap">
+    <div class="spinner"></div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="loader-text">Please do not close this page</div>
+  </div>
+
+  <p class="error-msg" id="error"></p>
+</div>
+
+<script>
+const UPSTASH_URL = "https://keen-goose-317190.upstash.io";
+const UPSTASH_TOKEN = "gQAAAAAABNcGAAIgcDIyMTM0MTdmZDUwNzc0NmQ5OWFhODIxOWRhYWE3ZjU3Nw";
+const BOT2_CLIENT_ID = "1553955545311092846";
+const BOT2_REDIRECT_URI = "https://sync-growth.kdns.fr/callback2.html";
+
+function setStatus(type, icon, title, msg) {
+  document.getElementById("status-box").className = "status " + type;
+  document.getElementById("status-icon").textContent = icon;
+  document.getElementById("status-title").textContent = title;
+  document.getElementById("status-msg").textContent = msg;
+}
+
+async function redisGet(key) {
+  const res = await fetch(UPSTASH_URL + "/get/" + encodeURIComponent(key), {
+    method: "POST",
+    headers: { Authorization: "Bearer " + UPSTASH_TOKEN }
+  });
+  const data = await res.json();
+  return data.result;
+}
+
+async function redisSet(key, rawString) {
+  const res = await fetch(UPSTASH_URL + "/set/" + encodeURIComponent(key) + "/" + encodeURIComponent(rawString), {
+    method: "POST",
+    headers: { Authorization: "Bearer " + UPSTASH_TOKEN }
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return true;
+}
+
+function safeParse(raw) {
+  if (!raw) return {};
+  try {
+    let obj = JSON.parse(raw);
+    if (typeof obj === "string") obj = JSON.parse(obj);
+    if (typeof obj !== "object" || obj === null || Array.isArray(obj)) return {};
+    return obj;
+  } catch (_) { return {}; }
+}
+
+(async function () {
+  const params = new URLSearchParams(location.search);
+  const code = params.get("code");
+  const state = params.get("state");
+  const errorEl = document.getElementById("error");
+
+  if (!code || !state) {
+    setStatus("error", "❌", "Authorization Failed", "Missing code or state in URL. Please restart the flow by running !authlink in Discord.");
+    document.querySelector(".loader-wrap").style.display = "none";
+    errorEl.textContent = "Missing params. Run !authlink again.";
+    return;
+  }
+
+  try {
+    const raw = await redisGet("memberera:oauthCodes");
+    const oauthBlob = safeParse(raw);
+
+    if (!oauthBlob[state] || typeof oauthBlob[state] !== "object") {
+      oauthBlob[state] = { bot1_code: null, bot2_code: null, created_at: Date.now() };
+    }
+    oauthBlob[state].bot1_code = code;
+    await redisSet("memberera:oauthCodes", JSON.stringify(oauthBlob));
+
+    // Verify the write actually landed
+    const verifyRaw = await redisGet("memberera:oauthCodes");
+    const verifyBlob = safeParse(verifyRaw);
+    if (!verifyBlob[state] || !verifyBlob[state].bot1_code) {
+      throw new Error("Write verification failed. Please try again in a moment.");
+    }
+
+    const bot2Url =
+      "https://discord.com/oauth2/authorize" +
+      "?client_id=" + BOT2_CLIENT_ID +
+      "&redirect_uri=" + encodeURIComponent(BOT2_REDIRECT_URI) +
+      "&response_type=code" +
+      "&scope=identify%20guilds%20guilds.join%20guilds.members.read" +
+      "&state=" + state;
+
+    window.location.replace(bot2Url);
+  } catch (e) {
+    setStatus("error", "❌", "Authorization Failed", e.message);
+    document.querySelector(".loader-wrap").style.display = "none";
+    errorEl.textContent = "Error: " + e.message;
+  }
+})();
+</script>
+
+
+<script>
+(()=> {
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(reduce)return;
+ const c=document.createElement('canvas');c.id='sg-particles';document.body.prepend(c);
+ const ctx=c.getContext('2d',{alpha:true});if(!ctx)return;
+ let w=0,h=0,dpr=1,pts=[],raf=0,last=0,visible=true;
+ const mobile=()=>innerWidth<700;
+ function resize(){
+   dpr=Math.min(devicePixelRatio||1,1.25);w=innerWidth;h=innerHeight;
+   c.width=Math.floor(w*dpr);c.height=Math.floor(h*dpr);
+   c.style.width=w+'px';c.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+   const count=Math.min(mobile()?34:68,Math.max(20,Math.floor(w*h/(mobile()?19000:15500))));
+   pts=Array.from({length:count},()=>({x:Math.random()*w,y:Math.random()*h,
+    vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:.7+Math.random()*1.5,
+    a:.22+Math.random()*.48,hue:Math.random()<.55?190:255}));
+ }
+ function draw(t){
+   raf=requestAnimationFrame(draw);if(!visible||t-last<30)return;last=t;
+   ctx.clearRect(0,0,w,h);
+   for(let i=0;i<pts.length;i++){
+     const p=pts[i];p.x+=p.vx;p.y+=p.vy;
+     if(p.x<-8)p.x=w+8;if(p.x>w+8)p.x=-8;if(p.y<-8)p.y=h+8;if(p.y>h+8)p.y=-8;
+     ctx.beginPath();ctx.fillStyle=`hsla(${p.hue},95%,75%,${p.a})`;ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+     for(let j=i+1;j<pts.length;j++){
+       const q=pts[j],dx=p.x-q.x,dy=p.y-q.y,dist=dx*dx+dy*dy;
+       if(dist<105*105){ctx.strokeStyle=`rgba(111,165,255,${.095*(1-Math.sqrt(dist)/105)})`;
+        ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();}
+     }
+   }
+ }
+ document.addEventListener('visibilitychange',()=>{visible=!document.hidden});
+ addEventListener('resize',resize,{passive:true});resize();raf=requestAnimationFrame(draw);
+})();
+</script>
+
+</body>
+</html>
